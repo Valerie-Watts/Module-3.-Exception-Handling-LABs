@@ -2,6 +2,7 @@
 #include <vector>
 #include <exception>
 
+
 class InvalidTowerException : public std::exception {
 public:
     const char* what() const noexcept override {
@@ -9,12 +10,14 @@ public:
     }
 };
 
+
 class InvalidMoveException : public std::exception {
 public:
     const char* what() const noexcept override {
         return "Invalid move. Cannot place a larger disk on a smaller one.";
     }
 };
+
 
 class EmptyTowerException : public std::exception {
 public:
@@ -113,56 +116,57 @@ public:
         targetTower.blocks.Push(blocks.Pop());
         return true;
     }
-
-    void PrintTowers(Tower towers[], int numTowers) {
-        int maxHeight = 0;
-        for (int i = 0; i < numTowers; i++) {
-            std::vector<int> currentBlocks = towers[i].blocks.GetBlocks();
-            if (currentBlocks.size() > maxHeight) {
-                maxHeight = currentBlocks.size();
-            }
-        }
-
-        std::vector<std::vector<int>> allBlocks;
-        for (int i = 0; i < numTowers; i++) {
-            allBlocks.push_back(towers[i].blocks.GetBlocks());
-        }
-
-        for (int level = 0; level < maxHeight; level++) {
-            for (int t = 0; t < numTowers; t++) {
-                if (level < allBlocks[t].size()) {
-                    int blockSize = allBlocks[t][level];
-                    int spaces = (13 - blockSize) / 2;
-                    for (int s = 0; s < spaces; s++) std::cout << " ";
-                    for (int s = 0; s < blockSize; s++) std::cout << "*";
-                    for (int s = 0; s < spaces; s++) std::cout << " ";
-                }
-                else {
-                    for (int s = 0; s < 6; s++) std::cout << " ";
-                    std::cout << "|";
-                    for (int s = 0; s < 6; s++) std::cout << " ";
-                }
-                std::cout << "   ";
-            }
-            std::cout << "\n";
-        }
-
-        for (int t = 0; t < numTowers; t++) {
-            std::cout << "=============   ";
-        }
-        std::cout << "\n";
-
-        for (int t = 0; t < numTowers; t++) {
-            std::cout << "   Tower " << (t + 1) << "      ";
-        }
-        std::cout << "\n\n";
-    }
 };
 
+
+void PrintTowers(Tower towers[], int numTowers) {
+    int maxHeight = 0;
+    for (int i = 0; i < numTowers; i++) {
+        std::vector<int> currentBlocks = towers[i].blocks.GetBlocks();
+        if (currentBlocks.size() > maxHeight) {
+            maxHeight = currentBlocks.size();
+        }
+    }
+
+    std::vector<std::vector<int>> allBlocks;
+    for (int i = 0; i < numTowers; i++) {
+        allBlocks.push_back(towers[i].blocks.GetBlocks());
+    }
+
+    for (int level = 0; level < maxHeight; level++) {
+        for (int t = 0; t < numTowers; t++) {
+            if (level < allBlocks[t].size()) {
+                int blockSize = allBlocks[t][level];
+                int spaces = (13 - blockSize) / 2;
+                for (int s = 0; s < spaces; s++) std::cout << " ";
+                for (int s = 0; s < blockSize; s++) std::cout << "*";
+                for (int s = 0; s < spaces; s++) std::cout << " ";
+            }
+            else {
+                for (int s = 0; s < 6; s++) std::cout << " ";
+                std::cout << "|";
+                for (int s = 0; s < 6; s++) std::cout << " ";
+            }
+            std::cout << "   ";
+        }
+        std::cout << "\n";
+    }
+
+    for (int t = 0; t < numTowers; t++) {
+        std::cout << "=============   ";
+    }
+    std::cout << "\n";
+
+    for (int t = 0; t < numTowers; t++) {
+        std::cout << "   Tower " << (t + 1) << "      ";
+    }
+    std::cout << "\n\n";
+}
+
 int main() {
-    Tower Tower1, Tower2, Tower3;
+    
+    Tower towers[3];
     int blocks = 0;
-    Tower towers[] = { Tower1, Tower2, Tower3 };
 
     std::cout << "Insert the number of disks from 1-7: ";
     std::cin >> blocks;
@@ -172,11 +176,12 @@ int main() {
         return 0;
     }
 
+    // Orden decreciente de bloques
     for (int i = blocks; i >= 1; i--) {
         towers[0].AddBlocks(i * 2 - 1);
     }
 
-    towers[0].PrintTowers(towers, 3);
+    PrintTowers(towers, 3);
 
     while (true) {
         try {
@@ -197,7 +202,7 @@ int main() {
 
             towers[fromTowerIndex].Move(towers[toTowerIndex]);
             std::cout << "Moved a disk from tower " << (fromTowerIndex + 1) << " to tower " << (toTowerIndex + 1) << "\n";
-            towers[0].PrintTowers(towers, 3);
+            PrintTowers(towers, 3);
 
             if (towers[2].blocks.GetBlocks().size() == blocks) {
                 std::cout << "\nCongratulations! You've solved the Tower of Hanoi!\n";
