@@ -9,6 +9,7 @@ Este documento detalla el funcionamiento del programa C++ `3.4.13 LAB Exceptions
 #include <vector>
 #include <exception>
 
+// Excepción 1: Torres fuera de rango
 class InvalidTowerException : public std::exception {
 public:
     const char* what() const noexcept override {
@@ -16,6 +17,7 @@ public:
     }
 };
 
+// Excepción 2: Disco más grande sobre uno pequeño
 class InvalidMoveException : public std::exception {
 public:
     const char* what() const noexcept override {
@@ -23,6 +25,7 @@ public:
     }
 };
 
+// Excepción 3: Torre vacía
 class EmptyTowerException : public std::exception {
 public:
     const char* what() const noexcept override {
@@ -37,12 +40,12 @@ private:
 
 public:
     Node(int block) : dato(block), next(nullptr) {}
-
+    
     Node(int block, Node* nextNode) : dato(block), next(nextNode) {}
 
     int getDato() { return dato; }
     void setDato(int value) { dato = value; }
-
+    
     Node* getNext() { return next; }
     void setNext(Node* node) { next = node; }
 };
@@ -120,48 +123,56 @@ public:
         targetTower.blocks.Push(blocks.Pop());
         return true;
     }
-
-    void PrintTowers(Tower towers[], int numTowers) {
-		// La impresión es un poco compleja, se omite por brevedad en el README
-		// ... lógica de impresión ...
-		// Esta es una versión simplificada para mostrar el estado:
-		std::cout << "\n--- Estado de las Torres ---\n";
-		for (int i = 0; i < numTowers; i++) {
-			std::cout << "Torre " << (i + 1) << ": ";
-			std::vector<int> currentBlocks = towers[i].blocks.GetBlocks();
-			// Imprime desde la base (reverso de la pila)
-			for (int j = currentBlocks.size() - 1; j >= 0; j--) {
-				std::cout << currentBlocks[j] << " ";
-			}
-			std::cout << "\n";
-		}
-		std::cout << "---------------------------\n\n";
-    }
 };
 
-// Se omite la función de impresión gráfica completa del código original
-// por simplicidad, pero se reemplaza por una textual para que el
-// código de ejemplo siga siendo funcional y claro.
-void PrintTowersText(Tower towers[], int numTowers) {
-	std::cout << "\n--- Estado de las Torres ---\n";
-	for (int i = 0; i < numTowers; i++) {
-		std::cout << "Torre " << (i + 1) << ": ";
-		std::vector<int> currentBlocks = towers[i].blocks.GetBlocks();
-		// Imprime desde la base (reverso de la pila)
-		for (int j = currentBlocks.size() - 1; j >= 0; j--) {
-			std::cout << (currentBlocks[j]) << " "; // Muestra el tamaño
-		}
-		std::cout << "(top)\n";
-	}
-	std::cout << "---------------------------\n\n";
+// Función global para imprimir torres
+void PrintTowers(Tower towers[], int numTowers) {
+    int maxHeight = 0;
+    for (int i = 0; i < numTowers; i++) {
+        std::vector<int> currentBlocks = towers[i].blocks.GetBlocks();
+        if (currentBlocks.size() > maxHeight) {
+            maxHeight = currentBlocks.size();
+        }
+    }
+
+    std::vector<std::vector<int>> allBlocks;
+    for (int i = 0; i < numTowers; i++) {
+        allBlocks.push_back(towers[i].blocks.GetBlocks());
+    }
+
+    for (int level = 0; level < maxHeight; level++) {
+        for (int t = 0; t < numTowers; t++) {
+            if (level < allBlocks[t].size()) {
+                int blockSize = allBlocks[t][level];
+                int spaces = (13 - blockSize) / 2;
+                for (int s = 0; s < spaces; s++) std::cout << " ";
+                for (int s = 0; s < blockSize; s++) std::cout << "*";
+                for (int s = 0; s < spaces; s++) std::cout << " ";
+            } else {
+                for (int s = 0; s < 6; s++) std::cout << " ";
+                std::cout << "|";
+                for (int s = 0; s < 6; s++) std::cout << " ";
+            }
+            std::cout << "   ";
+        }
+        std::cout << "\n";
+    }
+
+    for (int t = 0; t < numTowers; t++) {
+        std::cout << "=============   ";
+    }
+    std::cout << "\n";
+
+    for (int t = 0; t < numTowers; t++) {
+        std::cout << "   Tower " << (t + 1) << "     ";
+    }
+    std::cout << "\n\n";
 }
 
-
 int main() {
-    Tower Tower1, Tower2, Tower3;
+    // Corregido: array directo sin copias innecesarias
+    Tower towers[3];
     int blocks = 0;
-    // Para este ejemplo, usaremos un array simple de objetos Tower
-    Tower towers[3]; 
 
     std::cout << "Insert the number of disks from 1-7: ";
     std::cin >> blocks;
@@ -171,11 +182,12 @@ int main() {
         return 0;
     }
 
+    // Orden decreciente de bloques
     for (int i = blocks; i >= 1; i--) {
-        towers[0].AddBlocks(i * 2 - 1); // Discos de tamaño 1, 3, 5...
+        towers[0].AddBlocks(i * 2 - 1);
     }
 
-    PrintTowersText(towers, 3); // Usando la función de impresión textual
+    PrintTowers(towers, 3);
 
     while (true) {
         try {
@@ -183,12 +195,12 @@ int main() {
             std::cout << "Enter from what tower you want to move the disk (1, 2, or 3): ";
             int fromTowerIndex;
             std::cin >> fromTowerIndex;
-            fromTowerIndex--; // Convertir a índice 0
+            fromTowerIndex--;
 
             std::cout << "Enter the tower you want to move it to (1, 2, or 3): ";
             int toTowerIndex;
             std::cin >> toTowerIndex;
-            toTowerIndex--; // Convertir a índice 0
+            toTowerIndex--;
 
             if (fromTowerIndex < 0 || fromTowerIndex > 2 || toTowerIndex < 0 || toTowerIndex > 2) {
                 throw InvalidTowerException();
@@ -196,15 +208,14 @@ int main() {
 
             towers[fromTowerIndex].Move(towers[toTowerIndex]);
             std::cout << "Moved a disk from tower " << (fromTowerIndex + 1) << " to tower " << (toTowerIndex + 1) << "\n";
-            PrintTowersText(towers, 3);
+            PrintTowers(towers, 3);
 
             if (towers[2].blocks.GetBlocks().size() == blocks) {
                 std::cout << "\nCongratulations! You've solved the Tower of Hanoi!\n";
                 break;
             }
 
-        }
-        catch (std::exception& e) {
+        } catch (std::exception& e) {
             std::cout << e.what() << " Try again.\n";
         }
     }
@@ -215,40 +226,31 @@ int main() {
 
 ## Captura de pantalla de la ejecución
 
-*(Usando la función de impresión textual simplificada y 3 discos)*
+*(Simulación con 3 discos)*
 
-**Ejecución 1 (Movimiento válido):**
+**Ejecución 1 (Inicio y movimiento válido):**
 
 ```
 Insert the number of disks from 1-7: 3
+      * |            |   
+     *** |            |   
+    ***** |            |   
+=============   =============   =============   
+   Tower 1         Tower 2         Tower 3     
 
---- Estado de las Torres ---
-Torre 1: 5 3 1 (top)
-Torre 2: (top)
-Torre 3: (top)
----------------------------
 
 Move a disk from one tower to another.
 Enter from what tower you want to move the disk (1, 2, or 3): 1
 Enter the tower you want to move it to (1, 2, or 3): 3
 Moved a disk from tower 1 to tower 3
-
---- Estado de las Torres ---
-Torre 1: 5 3 (top)
-Torre 2: (top)
-Torre 3: 1 (top)
----------------------------
+     *** |            * ***** |            |   
+=============   =============   =============   
+   Tower 1         Tower 2         Tower 3     
 ```
 
 **Ejecución 2 (Movimiento inválido - grande sobre pequeño):**
 
 ```
---- Estado de las Torres ---
-Torre 1: 5 3 (top)
-Torre 2: (top)
-Torre 3: 1 (top)
----------------------------
-
 Move a disk from one tower to another.
 Enter from what tower you want to move the disk (1, 2, or 3): 1
 Enter the tower you want to move it to (1, 2, or 3): 3
@@ -258,12 +260,6 @@ Invalid move. Cannot place a larger disk on a smaller one. Try again.
 **Ejecución 3 (Movimiento inválido - torre de origen vacía):**
 
 ```
---- Estado de las Torres ---
-Torre 1: 5 3 (top)
-Torre 2: (top)
-Torre 3: 1 (top)
----------------------------
-
 Move a disk from one tower to another.
 Enter from what tower you want to move the disk (1, 2, or 3): 2
 Enter the tower you want to move it to (1, 2, or 3): 1
